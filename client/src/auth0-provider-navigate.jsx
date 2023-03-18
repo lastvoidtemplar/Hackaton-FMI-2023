@@ -8,7 +8,7 @@ export const Auth0ProviderWithNavigate = ({ children }) => {
     const domain = import.meta.env.VITE_AUTH0_DOMAIN;
     const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
     const redirectUri = import.meta.env.VITE_AUTH0_CALLBACK_URL;
-    const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
+    const audience = import.meta.env.VITE_AUDIENCE_PYTHON;
 
     // From Auth0 Login page back to current page
     const onRedirectCallback = (appState) => {
