@@ -26,7 +26,7 @@ const Home = () => {
     <>
         <Header />
         <body>
-          Ez
+          
         </body>
         {/* <div>{user.sub}</div>
         <div>{user.name}</div>

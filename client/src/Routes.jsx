@@ -7,7 +7,6 @@ import { Route, Routes } from "react-router-dom"
 
 const MainRoutes = () => {
     return (
-        <main>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<AuthGuard component={Home} />}/>
@@ -31,7 +30,6 @@ const MainRoutes = () => {
               
         */}
       </Routes>
-    </main>
 
 )
 }
