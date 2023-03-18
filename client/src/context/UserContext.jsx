@@ -1,12 +1,12 @@
 import React, { createContext, useReducer} from 'react'
 
-export const RoleContext = createContext();
+export const UserContext = createContext();
 
 const initialState = {
     role: "",
 }
 
-const roleReducer= (state, action) => {
+const userReducer= (state, action) => {
     switch(action.type) {
         case 'LEAVE_PARTY':
             return {...state, role: "Guest"}
@@ -15,15 +15,15 @@ const roleReducer= (state, action) => {
     }
 }
 
-export const RoleProvider = ({ children }) => {
-    const [role, roleDispatch] = useReducer(roleReducer, initialState)
+export const UserProvider = ({ children }) => {
+    const [auth, userDispatch] = useReducer(userReducer, initialState)
 
     return (
-        <RoleContext.Provider value={{
-            role,
-            roleDispatch
+        <UserContext.Provider value={{
+            auth,
+            userDispatch
         }}>
             {children}
-        </RoleContext.Provider>
+        </UserContext.Provider>
     )
 }
