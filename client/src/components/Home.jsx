@@ -12,32 +12,50 @@ const Home = () => {
   const [show, setShow] = useState(false);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
-
+  
   // Auth stuff
-  const { user, getAccessTokenSilently, error } = useAuth0();
+  const { user, getAccessTokenSilently, error, logout } = useAuth0();
   const { auth } = useContext(UserContext);
 
   if (!user) return null;
-  if (error) return (<div>Oops</div>)
 
-  useEffect(() => {
-    const getToken = async () => {
+  
 
-      const accessToken = await getAccessTokenSilently();
-      const res = await authenticate(accessToken);
-      console.log(res)
-    }
-    getToken();
-  }, [getAccessTokenSilently])
+  // useEffect(() => {
+  //   const getToken = async () => {
+
+  //     const accessToken = await getAccessTokenSilently();
+  //     const res = await authenticate(accessToken);
+  //     console.log(res)
+  //   }
+  //   getToken();
+  // }, [getAccessTokenSilently])
+
+//   useEffect(() => {
+//     const handleTabClose = event => {
+//       event.preventDefault();
+
+//       console.log('beforeunload event triggered');
+
+//       return (event.returnValue =
+//         'Are you sure you want to exit?');
+//     };
+
+//     window.addEventListener('beforeunload', handleTabClose);
+
+//     return () => {
+//       window.removeEventListener('beforeunload', handleTabClose);
+//     };
+//   }, []);
 
   return (
     <>
       <Header />
-      <main className=''>
-      <h1 className='text-center display-1'>Sample  name</h1>
-        <h2 className='text-center display-5'>by koch kompania</h2>
+      <main className='text-white'>
+      <h1 className='text-center display-1 fw-bold'>Sample  name</h1>
+        <h2 className='text-center display-5 '>by koch kompania</h2>
         <div className="d-flex justify-content-center gap-5 mt-5 pt-5">
-          <Link className="btn btn-primary btn-lg" type="button" to='/party'>Start a party!</Link>
+          <Link className="btn btn-primary btn-lg" type="button" to='/party'>Create a party!</Link>
           <Button className='btn-lg' variant="primary" onClick={handleShow}>Join a party!</Button>
             <Modal show={show} onHide={handleClose}>
               <Modal.Header closeButton>

@@ -4,12 +4,17 @@ export const UserContext = createContext();
 
 const initialState = {
     role: "",
+    loggedOut: true
 }
 
 const userReducer= (state, action) => {
     switch(action.type) {
         case 'LEAVE_PARTY':
             return {...state, role: "Guest"}
+        case 'LOGOUT':
+            return {...state, loggedOut: true}
+        case 'LOGIN':
+            return {...state, loggedOut: false}
         case 'START_PARTY':
             return {...state, role: "Owner"}
     }

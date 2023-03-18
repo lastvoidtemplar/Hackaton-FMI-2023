@@ -1,9 +1,11 @@
 import React from 'react'
-import { Button } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
+
+
 
 const Leave = () => {
   return (
-    <Button variant="danger">Leave</Button>
+    <Link className='btn btn-danger' variant="danger" to='/home'>Leave</Link>
   )
 }
 

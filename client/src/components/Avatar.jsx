@@ -17,7 +17,7 @@ const Avatar = () => {
 
     return (
         <Dropdown>
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
+            <Dropdown.Toggle className='secondary' variant="success" id="dropdown-basic">
                 {/* <button className='btn btn-secondary rounded dropdown-toggle' type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                     <img className='rounded-circle me-2' src={user.picture} alt="" width="30" height="30" />
                     {user.name}

@@ -1,18 +1,19 @@
 html {
-    margin: 0px;
-    height: 100%;
-    width: 100%;
- }
- 
- body {
-    margin: 0px;
-    min-height: 100%;
-    width: 100%;
-    background-color: grey
- }
+   margin: 0px;
+   height: 100%;
+   width: 100%;
+}
 
- div#root {
-    margin: 0px;
-    min-height: 100%;
-    width: 100%;
- }
+body {
+   margin: 0px;
+   min-height: 100%;
+   width: 100%;
+   background: rgb(0, 0, 0);
+   background: linear-gradient(180deg, rgba(0, 0, 0, 1) 50%, rgba(244, 2, 2, 1) 100%);
+}
+
+div#root {
+   margin: 0px;
+   min-height: 100%;
+   width: 100%;
+}

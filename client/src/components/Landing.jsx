@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import Header from './Header'
 import { useAuth0 } from '@auth0/auth0-react';
+import { UserContext } from '../context/UserContext';
+import { Outlet } from 'react-router';
 
 const Landing = () => {
 
     // goes to /authorize - i.e. Auth0 server
-    const { loginWithRedirect } = useAuth0();
+    const { loginWithRedirect, isAuthenticated } = useAuth0();
+    const { auth, userDispatch } = useContext(UserContext)
 
     const handleSignup = async () => {
         await loginWithRedirect({
@@ -18,28 +21,32 @@ const Landing = () => {
         })
     }
 
-    // const handleLogout = () => {
-    //   logout({
-    //       logoutParams: {
-    //           returnTo: window.location.origin
-    //       }
-    //   })
-    // }
+    const handleLogout = () => {
+      logout({
+          logoutParams: {
+              returnTo: window.location.origin
+          }
+      })
+    }
 
-    // useEffect(() => {
-    //   handleLogout();
-    // }, [])
+    useEffect(() => {
+      if(isAuthenticated) {
+        handleLogout();
+        console.log('auhds')
+      }
+    }, [])
 
   return (
     <>
       <Header />
-      <main className='pt-4'>
-        <h1 className='text-center display-1'>Sample  name</h1>
+      <main className='pt-4 text-white'>
+        <h1 className='text-center display-1 fw-bold'>Sample  name</h1>
         <h2 className='text-center display-5'>by koch kompania</h2>
         <div className='d-flex justify-content-center mt-4 '>
           <button className='mt-4 btn btn-dark btn-lg' onClick={handleSignup}>Get Started</button>
         </div>
       </main>
+      <Outlet />
     </>
   )
 }

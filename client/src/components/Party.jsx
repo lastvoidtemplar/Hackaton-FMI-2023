@@ -7,17 +7,18 @@ import { UserContext } from '../context/UserContext'
 import { io } from 'socket.io-client'
 import { Card, Button } from 'react-bootstrap'
 import Header from './Header'
+import './components.css'
 
 const Party = () => {
 
     const { user, isAthenticated } = useAuth0();
     const { auth, userDispatch } = useContext(UserContext);
 
-    const isSmall = useMediaQuery({query: '(min-width: 576px)'})
-    const isMedium = useMediaQuery({ query: '(min-width: 768px)' })
+    // const isSmall = useMediaQuery({ query: '(min-width: 576px)' })
+    // const isMedium = useMediaQuery({ query: '(min-width: 768px)' })
     const isLarge = useMediaQuery({ query: '(min-width: 992px)' })
 
-    const imageWidth = isLarge ? 150 : (isMedium ? 50 : 25)
+    const imageWidth = isLarge ? 100 : 50
 
     useEffect(() => {
         if (isAthenticated) {
@@ -46,7 +47,7 @@ const Party = () => {
     return (
         <>
             <Header />
-            <div className="input-group d-flex justify-content-center mt-4">
+            <div className="input-group d-flex justify-content-center my-4">
                 <div className="form-outline">
                     <input type="search" id="form1" className="form-control" placeholder='Search' />
                 </div>
@@ -56,22 +57,42 @@ const Party = () => {
             </div>
 
             {/* cards */}
-            <div className='mx-5 d-flex flex-column justify-content-center overflow-hidden'>
-            {[...Array(10)].map(() => (
-                <Card className="d-flex flex-row m-3">
-                    <Card.Img style={{width: `${imageWidth}px`, height: `${imageWidth}px`}} variant="top" src="https://picsum.photos/200" />
-                    <Card.Body>
-                    <Card.Title>Sample song</Card.Title>
-                    <Card.Text>
-                        By X, Y , z
-                        Album : askjdasjkd
-                    </Card.Text>
-                    <Button variant="primary">Go somewhere</Button>
-                    </Card.Body>
-                </Card>
+            <div id="over" className='d-flex flex-column overflow-auto'>
+                {[...Array(10)].map(() => (
+                    <div className='d-flex justify-content-center '>
+                        <Card className="d-flex flex-row justify-content-between m-3 w-100">
+                            <Card.Img style={{ width: `${imageWidth}px`, height: `${imageWidth}px` }} className="my-auto w-auto" variant="top" src="https://picsum.photos/200" />
+                            <Card.Body>
+                                <Card.Title>Sample song</Card.Title>
+                                <Card.Text>
+                                    By X, Y , z
+                                    Album : askjdasjkd
+                                </Card.Text>
+                            </Card.Body>
+
+                            <h4 className='my-auto mx-5'>Votes: X</h4>
+                        </Card>
+                        <Button variant='success' className='px-3 my-5 mx-1'><FontAwesomeIcon icon={faArrowUp} /></Button>
+                        <Button variant='danger' className='px-3 my-5    mx-1'><FontAwesomeIcon icon={faArrowDown} /></Button>
+                    </div>
                 ))}
             </div>
-                {/* // <div className="">
+
+
+            <div id="cardFooter" className='d-flex justify-content-center position-fixed end-50  bottom-0'>
+                <div className="card text-center">
+                    <div className="card-body d-flex justify-content-around gap-5">
+                        <img style={{ width: `${imageWidth}px`, height: `${imageWidth}px` }} src="https://picsum.photos/200" className="img-fluid rounded-start" alt="" />
+                        <div>
+                            <p className="card-text">Now playing</p>
+                            <h5 className="card-title">Song name</h5>
+                            <h6 className="card-subtitle mb-2 text-muted">By ewgwegwe</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* // <div className="">
                 // <div className='d-flex justify-content-center'>
                 //     <div className="card mt-5 w-75">
                 //         <div className="row g-0">
