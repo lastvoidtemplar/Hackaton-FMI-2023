@@ -10,6 +10,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize?";
+const FRONTEND_REDIRECT_URL = process.env.FRONTEND_REDIRECT_URL
 
 let party_id = 0;
 
@@ -23,7 +24,7 @@ const generateRandomString = (length) => {
   return text;
 };
 const stateKey = "spotify_auth_state";
-router.get("/login", (req, res) => {
+router.get("/createParty", (req, res) => {
   const state = req.query.owner_id;
   res.cookie(stateKey, state);
   const scope = "user-read-private user-read-email";
@@ -69,7 +70,7 @@ router.get("/callback", async (req, res) => {
       if (response.status === 200) {
         party_id++;
         const dto = await createParty(response.data,state);
-        res.redirect(`http://localhost:5173/party?party_id=${dto.id}&code=${dto.code}`);
+        res.redirect(`${FRONTEND_REDIRECT_URL}${dto.code}?party_id=${dto.id}`);
       } else {
         console.log(response);
         res.json(response);
