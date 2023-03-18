@@ -1,7 +1,8 @@
 import React from 'react'
-import Landing from "./Landing"
-import Home from "./Home"
+import Landing from "./components/Landing"
+import Home from "./components/Home"
 import Callback from './Callback'
+import { AuthGuard } from './components/AuthGuard'
 import { Route, Routes } from "react-router-dom"
 
 const MainRoutes = () => {
@@ -9,7 +10,7 @@ const MainRoutes = () => {
         <main>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/home" element={<Home />}/>
+        <Route path="/home" element={<AuthGuard component={Home} />}/>
         <Route path="/callback" element={<Callback />}/>
         {/* "/" -> <Home />
             "/vote" -> <VotingPoll> 
