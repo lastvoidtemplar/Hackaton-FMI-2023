@@ -6,6 +6,6 @@ console.log('Create a connection');
 const client = new MongoClient(MONGO_URL);
 
 
-const database = client.db('Spotify');
+const database = client.db('Hakaton');
 
 module.exports = database;

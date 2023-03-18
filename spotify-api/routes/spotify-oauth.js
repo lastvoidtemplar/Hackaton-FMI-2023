@@ -2,7 +2,7 @@ require("dotenv").config();
 const querystring = require("querystring");
 const express = require("express");
 const axios = require("axios");
-const { addToken, getToken } = require("../services/userService");
+const { createParty, getAccessToken } = require("../services/partyService");
 const router = express.Router();
 
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -69,7 +69,7 @@ router.get("/callback", async (req, res) => {
       });
       if (response.status === 200) {
         party_id++;
-        addToken(response.data, party_id);
+        await createParty(response.data,'copm',"12335");
         res.json("Succ");
       } else {
         console.log(response);
@@ -82,7 +82,7 @@ router.get("/callback", async (req, res) => {
 });
 
 router.get("/token", async (req, res) => {
-   res.json(await getToken(1));
+   res.json(await getAccessToken("6415f33edba4b61aadf9fccf"));
 });
 
 module.exports = router;
