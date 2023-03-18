@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/lastvoidtemplar/Hackaton-FMI-2023#readme",
   "dependencies": {
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "npm": "^9.6.2"
   },
