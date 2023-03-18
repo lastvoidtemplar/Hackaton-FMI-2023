@@ -18,23 +18,30 @@ async function createParty(spotify_data, name, owner_id) {
       owner_id: owner_id,
     });
     if (do_exist_party_with_the_same_owner !== null) {
-      await collection.deleteOne({ _id });
+      await collection.deleteOne({_id: do_exist_party_with_the_same_owner._id.toString()});
     }
     spotify_data = {
       ...spotify_data,
       expires_in: spotify_data.expires_in * 1000 + Date.now(),
     };
+    const code = generateCode()
     const party = {
       name,
-      code: generateCode(),
+      code,
       owner_id,
       guest: [owner_id],
       spotify_data,
     };
     const res = await collection.insertOne(party);
-    console.log(res);
+    return {
+      id:res.insertedId.toString(),
+      name,
+      code
+    }
+
   } catch (error) {
     console.log(error);
+    return null
   }
 }
 

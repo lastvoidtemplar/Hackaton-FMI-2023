@@ -1,10 +1,11 @@
 require("dotenv").config();
 const querystring = require("querystring");
+const bodyParser = require('body-parser');
 const express = require("express");
 const axios = require("axios");
 const { createParty, getAccessToken } = require("../services/partyService");
 const router = express.Router();
-
+router.use(bodyParser.urlencoded({ extended: false }));
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
@@ -25,7 +26,6 @@ const stateKey = "spotify_auth_state";
 router.get("/login", (req, res) => {
   const state = generateRandomString(16);
   res.cookie(stateKey, state);
-
   const scope = "user-read-private user-read-email";
   const redirect =
     SPOTIFY_AUTH_URL +
@@ -33,6 +33,7 @@ router.get("/login", (req, res) => {
       response_type: "code",
       client_id: CLIENT_ID,
       scope: scope,
+      name:name,
       state: state,
       redirect_uri: REDIRECT_URI,
     });
@@ -42,7 +43,6 @@ router.get("/login", (req, res) => {
 router.get("/callback", async (req, res) => {
   const code = req.query.code || null;
   const state = req.query.state || null;
-
   if (state === null) {
     res.redirect(
       "/#" +
@@ -69,8 +69,8 @@ router.get("/callback", async (req, res) => {
       });
       if (response.status === 200) {
         party_id++;
-        await createParty(response.data,'copm',"12335");
-        res.json("Succ");
+        const dto = await createParty(response.data,'copm',"12335");
+        res.json(dto);
       } else {
         console.log(response);
         res.json(response);
