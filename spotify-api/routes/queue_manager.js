@@ -1,12 +1,13 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
-
 const {createParty, getAccessToken} = require('../services/partyService');
 
+const SPOTIFY_PLAYLIST_NAME = "PARTY"
+const queues = [];
+
 async function getSpotifyToken(party) {
-  //return "BQDhyxxc_6AhjLZdHnCTmWtUfo2Q8nF9OKKaCSwi9B8XWdxxaRfKOt78iOHQ4tmLwI-ySJJbneh4veFgzESCgzSMwvwDeaSfhIkiXM2LKMyzj1NaZcEn81td05XahwM-V2ncbs9UNHo5lvYRp2NTcx3Zbt410zpFzx0zZFB82ZkSoObqmVoK89VfDW9EyaO7wTGhU9fQdUSbZYSzFKBixKu0MjjGhn7w-MTakdPKlExGHy8IqUup8CHtuz8iKNv4Vo59462mxhtTgHjxUKawWlqc4dFYWGVJ23Qm16EoMdxmNCocbyqxyGkHUWg6mg18s2O-dU9_9mYvYQ";
-  return getAccessToken("6415f33edba4b61aadf9fccf");
+  return getAccessToken("64160eaa060beeb82537882c");
 }
 
 function songFromResponse(item) {
@@ -24,7 +25,56 @@ function songFromResponse(item) {
   }; 
 }
 
-const queues = [];
+async function getUser(token) {
+  const user = await axios({
+    method: "get",
+    url: `https://api.spotify.com/v1/me`,
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  }).then((response) => {
+    // if success, parse and return
+    const profile = response.data;
+    console.log(profile);
+    return profile;
+  }).catch((error) => {
+    // if not, undefined
+    console.log(error.response.data);
+    return undefined;
+  });
+  return user; 
+}
+
+router.get('/user', async (req, res) => {
+  res.send(await getUser(await getSpotifyToken(req.query.id)));
+});
+
+async function createPlaylist(token) {
+  const user = await getUser(token);
+  const song = await axios({
+    method: "post",
+    url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  }).then((response) => {
+    // if success, parse and return
+    console.log(song);
+    return song;
+  }).catch((error) => {
+    // if not, undefined
+    console.log(error.response.data);
+    return undefined;
+  });
+
+}
+
+router.get('/playlist', async (req, res) => {
+  await createPlaylist(await getSpotifyToken(req.query.id));
+  res.send("done");
+});
 
 router.get('/', (req, res) => {
   res.send("Hello, queue");
@@ -86,7 +136,6 @@ router.get('/add', async (req, res) => {
 });
 
 router.get('/get', (req, res) => {
-  console.log("get queue");
   const partyid = req.query.id;
   if(!partyid) {
     res.status(400);
@@ -101,20 +150,20 @@ router.get('/get', (req, res) => {
   res.send(queues[partyid]);
 });
 
-// requires ?party=...?user=...?q=...?limit=...
+// requires ?id=...?user=...?q=...?limit=...
 // limit is optional
 router.get('/search/', async (req, res) => {
   const limit = req.query.limit ? req.query.limit : 10;
   const market = "BG";
   const q = req.query.q ? req.query.q : "never gonna give you up";
-  const party = req.query.party;
+  const party = req.query.id;
 
   if(!party) {
     res.status(401)
     res.send("invalid query");
     return;
   }
-  
+
   const spotify_token = await getSpotifyToken(party);
   axios({
     method: "get",
@@ -150,20 +199,21 @@ router.get('/search/', async (req, res) => {
 
 async function getDevices(token) {
   const devices = 
-  await axios({
-    method: "get",
-    url: "https://api.spotify.com/v1/me/player/devices",
-    headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${spotify_token}`,
-      "Content-Type": "application/json",
-    }
-  }).then((response) => {
-    return response.data.devices;
-  }).catch((response) => {
-    console.log("getting devices failed");
-    return [];
-  });
+    await axios({
+      method: "get",
+      url: "https://api.spotify.com/v1/me/player/devices",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }
+    }).then((response) => {
+      return response.data.devices;
+    }).catch((error) => {
+      console.log("getting devices failed");
+      console.log(error.response.data);
+      return [];
+    });
   return devices;
 }
 
@@ -180,5 +230,15 @@ async function getActiveDevice(token) {
   if(!activeDevice) return devices[0];
   return activeDevice;
 }
+
+router.get('/devices', async (req, res) => {
+  const partyid = req.query.id;
+  if(!partyid) {
+    res.status(400);
+    res.send("no party id");
+  }
+  const spotify_token = await getSpotifyToken(partyid);
+  res.send(await getDevices(spotify_token));
+});
 
 module.exports = router;
