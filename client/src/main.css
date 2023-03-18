@@ -1,0 +1,18 @@
+html {
+    margin: 0px;
+    height: 100%;
+    width: 100%;
+ }
+ 
+ body {
+    margin: 0px;
+    min-height: 100%;
+    width: 100%;
+    background-color: grey
+ }
+
+ div#root {
+    margin: 0px;
+    min-height: 100%;
+    width: 100%;
+ }

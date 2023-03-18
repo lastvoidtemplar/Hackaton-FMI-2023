@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import MainRoutes from './Routes'
 import { Auth0ProviderWithNavigate } from './auth0-provider-navigate'
 import { UserProvider } from './context/UserContext'
+import './main.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
