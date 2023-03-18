@@ -24,7 +24,7 @@ const generateRandomString = (length) => {
 };
 const stateKey = "spotify_auth_state";
 router.get("/login", (req, res) => {
-  const state = generateRandomString(16);
+  const state = req.query.owner_id;
   res.cookie(stateKey, state);
   const scope = "user-read-private user-read-email";
   const redirect =
@@ -33,7 +33,6 @@ router.get("/login", (req, res) => {
       response_type: "code",
       client_id: CLIENT_ID,
       scope: scope,
-      name:name,
       state: state,
       redirect_uri: REDIRECT_URI,
     });
@@ -69,7 +68,7 @@ router.get("/callback", async (req, res) => {
       });
       if (response.status === 200) {
         party_id++;
-        const dto = await createParty(response.data,'copm',"12335");
+        const dto = await createParty(response.data,state);
         res.json(dto);
       } else {
         console.log(response);
