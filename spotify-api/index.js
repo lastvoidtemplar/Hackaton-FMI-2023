@@ -6,8 +6,10 @@ const app = express();
 const port = 5000;
 const router = require('./routes/spotify-oauth');
 const queueRouter = require('./routes/queue_manager')
-
+const cors = require('cors')
+app.use(cors())
 app.use('/',router)
+
 app.use('/queue', queueRouter);
 
 app.get('/', (req, res) => {

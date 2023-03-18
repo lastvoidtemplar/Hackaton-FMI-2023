@@ -69,7 +69,7 @@ router.get("/callback", async (req, res) => {
       if (response.status === 200) {
         party_id++;
         const dto = await createParty(response.data,state);
-        res.json(dto);
+        res.redirect(`http://localhost:5173/party?party_id=${dto.id}&code=${dto.code}`);
       } else {
         console.log(response);
         res.json(response);
