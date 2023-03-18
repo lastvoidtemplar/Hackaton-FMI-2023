@@ -1,10 +1,12 @@
 import React from 'react'
 import { withAuthenticationRequired } from '@auth0/auth0-react'
+import Callback from '../Callback';
+import Header from './Header';
 
 export const AuthGuard = ({ component }) => {
     const Component = withAuthenticationRequired(component, {
         onRedirecting: () => (
-            <div>Page Loader</div>
+            <Header />
         )
     })
     return <Component />;
