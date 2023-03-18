@@ -26,7 +26,7 @@ const stateKey = "spotify_auth_state";
 router.get("/login", (req, res) => {
   const state = req.query.owner_id;
   res.cookie(stateKey, state);
-  const scope = "user-read-private user-read-email";
+  const scope = "user-read-private user-read-email playlist-modify-public playlist-modify-private user-modify-playback-state user-read-private user-read-playback-state user-read-currently-playing";
   const redirect =
     SPOTIFY_AUTH_URL +
     querystring.stringify({

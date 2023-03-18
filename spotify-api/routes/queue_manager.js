@@ -3,11 +3,15 @@ const axios = require("axios");
 const router = express.Router();
 const {createParty, getAccessToken} = require('../services/partyService');
 
-const SPOTIFY_PLAYLIST_NAME = "PARTY"
+const SPOTIFY_PLAYLIST_NAME = "PARTYPLAYLIST"
 const queues = [];
 
 async function getSpotifyToken(party) {
-  return getAccessToken("64160eaa060beeb82537882c");
+  return getAccessToken("64161b9a30b1c401ed78cc89");
+}
+
+function existsParty(partyid) {
+  return partyid && queues[partyid] !== undefined;
 }
 
 function songFromResponse(item) {
@@ -36,7 +40,6 @@ async function getUser(token) {
   }).then((response) => {
     // if success, parse and return
     const profile = response.data;
-    console.log(profile);
     return profile;
   }).catch((error) => {
     // if not, undefined
@@ -50,63 +53,92 @@ router.get('/user', async (req, res) => {
   res.send(await getUser(await getSpotifyToken(req.query.id)));
 });
 
-async function createPlaylist(token) {
+async function createPlaylist(token, partyid) {
   const user = await getUser(token);
-  const song = await axios({
+  const playlist = await axios({
     method: "post",
     url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
     headers: {
       "Accept": "application/json",
       "Authorization": `Bearer ${token}`
+    },
+    data: {
+      name: SPOTIFY_PLAYLIST_NAME + " - " + partyid,
+      description: "New playlist description",
+      public: false
     }
   }).then((response) => {
     // if success, parse and return
-    console.log(song);
-    return song;
+    return response.data;
   }).catch((error) => {
     // if not, undefined
     console.log(error.response.data);
     return undefined;
   });
 
+  queues[partyid].playlistid = playlist.id;
+  return playlist;
 }
 
 router.get('/playlist', async (req, res) => {
-  await createPlaylist(await getSpotifyToken(req.query.id));
-  res.send("done");
+  const partyid = req.query.id;
+  if(!existsParty(partyid)) {
+    res.status(400);
+    res.send("invalid party id");
+    return;
+  }
+  const result = await createPlaylist(await getSpotifyToken(req.query.id), req.query.id);
+
+  res.send(result);
 });
 
 router.get('/', (req, res) => {
   res.send("Hello, queue");
 });
 
+function createQueue(partyid) {
+  queues[partyid] = {
+    tracks: [],
+    playlistid: null
+  };
+  console.log(queues[partyid]);
+  return queues[partyid];
+}
+
 router.get('/create', (req, res) => {
-  if(!req.query.id) {
+  const partyid = req.query.id;
+  if(!partyid) {
     res.status(400);
-    res.send("no party id");
+    res.send("invalid party id");
+    return;
+  }
+  if(queues[partyid]) {
+    res.status(400);
+    res.send("party already created")
     return;
   }
   // TODO: check party id validity
-  const id = req.query.id;
-  queues[id] = [];
-  res.send("created queue");
-  console.log(queues);
+  const result = createQueue(partyid);
+  res.send(result);
 });
 
 router.get('/add', async (req, res) => {
   const partyid = req.query.id;
   const songid = req.query.trackid;
   // check arguments
-  if(!partyid || !songid) {
+  if(!existsParty(partyid) || !songid) {
     res.status(400);
-    res.send("partyid and songid needed");
+    res.send("valid partyid and songid needed");
     return;
   }
-  if(queues[partyid] === undefined) {
-    res.status(400);
-    res.send("partyid invalid");
-    return;
-  }  
+  const items = queues[partyid].tracks;
+  for(const item of items) {
+    if(item.track.id == songid) {
+      res.status(400);
+      res.send("song is already in there!!");
+      return;
+    }
+  }
 
   // get data for song on spotify
   const spotify_token = await getSpotifyToken(partyid);
@@ -121,7 +153,6 @@ router.get('/add', async (req, res) => {
     // if success, parse and return
     let track = response.data;
     const song = songFromResponse(track);
-    console.log(song);
     return song;
   }).catch((error) => {
     // if not, undefined
@@ -129,20 +160,15 @@ router.get('/add', async (req, res) => {
     return undefined;
   });
 
-  if(song) {
-    queues[partyid].push({track: song, votes: 0});
+  if(song) {        
+    queues[partyid].tracks.push({track: song, score: 0, votes: {}});
   }
   res.send(queues[partyid]);
 });
 
 router.get('/get', (req, res) => {
   const partyid = req.query.id;
-  if(!partyid) {
-    res.status(400);
-    res.send("no party id");
-    return;
-  }
-  if(queues[partyid] === undefined) {
+  if(!existsParty(partyid)) {
     res.status(400);
     res.send("invalid party id");
     return;
@@ -158,7 +184,7 @@ router.get('/search/', async (req, res) => {
   const q = req.query.q ? req.query.q : "never gonna give you up";
   const party = req.query.id;
 
-  if(!party) {
+  if(!existsParty(party)) {
     res.status(401)
     res.send("invalid query");
     return;
@@ -240,5 +266,61 @@ router.get('/devices', async (req, res) => {
   const spotify_token = await getSpotifyToken(partyid);
   res.send(await getDevices(spotify_token));
 });
+
+function addVote(partyid, userid, songid, direction) {
+  const items = queues[partyid].tracks;
+  for(const item of items) {
+    if(item.track.id == songid) {
+      if(item.votes[userid]) return;
+      if(direction > 0) item.score ++;
+      else if(direction < 0) item.score --;
+      else return;
+      item.votes[userid] = direction;
+      break;
+    }
+  }
+}
+
+function removeVote(partyid, userid, songid) {
+  const items = queues[partyid].tracks;
+  for(const item of items) {
+    if(item.track.id == songid) {
+      if(!item.votes[userid]) return
+      item.score -= item.votes[userid];
+      delete item.votes[userid];
+      break;
+    }
+  }
+}
+
+router.get('/vote', (req, res) => {
+  const partyid = req.query.id;
+  const songid = req.query.song;
+  const userid = req.query.user;
+  const direction = req.query.dir;
+  console.log(`vote: ${partyid}, ${songid}, ${userid}, ${direction}`);
+  if(!existsParty(partyid) || !songid || !userid || !direction) {
+    res.status(400);
+    res.send("invalid params");
+  }
+
+  addVote(partyid, userid, songid, direction);
+  res.send("success");
+});
+
+router.get('/unvote', (req, res) => {
+  const partyid = req.query.id;
+  const songid = req.query.song;
+  const userid = req.query.user;
+  console.log(`unvote: ${partyid}, ${songid}, ${userid}`);
+  if(!existsParty(partyid) || !songid || !userid) {
+    res.status(400);
+    res.send("invalid params");
+  }
+
+  removeVote(partyid, userid, songid);
+  res.send("success");
+});
+
 
 module.exports = router;
