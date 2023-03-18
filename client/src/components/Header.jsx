@@ -14,6 +14,7 @@ const Header = () => {
     const checkLocation = location.pathname === '/party';
 
     const { isAuthenticated } = useAuth0();
+    console.log(isAuthenticated)
 
     return (
         <header>

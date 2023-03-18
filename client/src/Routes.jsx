@@ -5,6 +5,7 @@ import Callback from './Callback'
 import { AuthGuard } from './components/AuthGuard'
 import { Route, Routes } from "react-router-dom"
 import Party from './components/Party'
+import NotFound from './components/NotFound'
 
 const MainRoutes = () => {
     return (
@@ -12,7 +13,8 @@ const MainRoutes = () => {
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<AuthGuard component={Home} />}/>
         <Route path="/callback" element={<Callback />}/>
-        <Route path="/party" element={<AuthGuard component={Party} />} />
+        <Route path="/party/:party_id" element={<AuthGuard component={Party} />} />
+        <Route path="*" element={<NotFound />} />
         {/* "/" -> <Home />
             "/vote" -> <VotingPoll> 
             "/login" -> <ButtonLogIn>

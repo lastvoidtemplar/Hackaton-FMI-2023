@@ -2,7 +2,7 @@ import axios from "axios"
 
 const authenticateAPICall = async ({config}) => {
     const transport = axios.create(config)
-    return await transport.post('/api/')
+    return await transport.post('/')
 }
 
 export const authenticate = async (accessToken) => {
