@@ -3,7 +3,16 @@ import jwt
 import dotenv
 dotenv.load_dotenv()
 
- 
+# def get_token():
+#     import http.client
+#     conn = http.client.HTTPSConnection("dev-40az2ck6ofh1tcz4.us.auth0.com")
+#     payload = "{\"client_id\":\"fKV70JUlhORze45KESxdeDFwN9KWJp3O\",\"client_secret\":\"HMv7t_XIVtMUi6-IwKOnF7ujZrwBMFeeAIoNqbGs_2qcHLhrmqUXLJKZl2rHcOoQ\",\"audience\":\"https://partymanager.com\",\"grant_type\":\"client_credentials\"}"
+#     headers = { 'content-type': "application/json" }
+#     conn.request("POST", "/oauth/token", payload, headers)
+#     res = conn.getresponse()
+#     data = res.read()
+#     print(data.decode("utf-8"))
+
 def set_up():
     """Sets up configuration for the app"""
 
@@ -49,3 +58,11 @@ class VerifyToken():
             return {"status": "error", "message": str(e)}
 
         return payload
+    
+def verify_token(token: str):
+    """ Test version of this function """
+
+    jwt_claims = VerifyToken(token).verify()
+    if jwt_claims.get('status') == 'error':
+        return True
+    return False
