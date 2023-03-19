@@ -3,7 +3,7 @@ import motor.motor_asyncio
 
 import os
 import dotenv
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path='.fapi-env')
 
 # MongoDB credentials
 user = os.getenv('MONGODB_USER')
