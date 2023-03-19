@@ -19,17 +19,17 @@ const Party = ( code ) => {
 
     const imageWidth = isLarge ? 100 : 50
 
-    useEffect(() => {
-        if (isAthenticated) {
-            const socket = io();
-            if (auth.role == "Guest") {
-                socket.emit('joinRoom', user.sub)
-            }
-            else {
-                socket.emit('createRoom', user.sub)
-            }
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (isAthenticated) {
+    //         const socket = io();
+    //         if (auth.role == "Guest") {
+    //             socket.emit('joinRoom', user.sub)
+    //         }
+    //         else {
+    //             socket.emit('createRoom', user.sub)
+    //         }
+    //     }
+    // }, [])
 
     const addSong = (song) => {
         socket.emit('addSong', song)

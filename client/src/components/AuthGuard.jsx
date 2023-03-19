@@ -6,7 +6,7 @@ import Header from './Header';
 export const AuthGuard = ({ component }) => {
     const Component = withAuthenticationRequired(component, {
         onRedirecting: () => (
-            <Header />
+            <Callback />
         )
     })
     return <Component />;
