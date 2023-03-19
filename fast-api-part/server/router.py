@@ -10,6 +10,9 @@ from .models import PartyRoomScheme
 router = APIRouter(prefix="/api")
 
 token_auth_scheme = HTTPBearer()
+@router.get('/fapi')
+async def hello():
+     return "This is fapi"
 
 @router.patch('/join', response_description="Join provided user to the party", tags=['Join'])
 async def join_to_room(
