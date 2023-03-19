@@ -45,7 +45,7 @@ async def get_party_room():
 @app.patch('/join')
 async def join_to_room(response: Response, 
                        userId: str = Body(), 
-                       code: str = Body(), 
+                       code: int = Body(), 
                        token: str = Depends(token_auth_scheme)):
 
     if verify_token(token.credentials):
@@ -53,11 +53,30 @@ async def join_to_room(response: Response,
             database = client.Hakaton
             document = await database.parties.find_one({"code": code})
             obj = PartyRoomScheme(**document)
-            obj.guests.append(userId)
-            #await database.parties.replace_one({'code': code}, {'guest': obj})
+            if obj:
+                obj.guest.append(userId)
+                await database.parties.update_one({'code': code}, {'$set': dict(obj)})
             return {"msg": "success"}
     
     response.status_code = status.HTTP_400_BAD_REQUEST
     return {"msg": "fail"} 
 
+@app.patch('/leave')
+async def leave_room(response: Response, 
+                       userId: str = Body(), 
+                       code: int = Body(), 
+                       token: str = Depends(token_auth_scheme)):
+
+    if verify_token(token.credentials):
+        if await check_connection():
+            database = client.Hakaton
+            document = await database.parties.find_one({"code": code})
+            obj = PartyRoomScheme(**document)
+            if obj:
+                obj.guest.remove(userId)
+                await database.parties.update_one({'code': code}, {'$set': dict(obj)})
+            return {"msg": "success"}
+    
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return {"msg": "fail"} 
 

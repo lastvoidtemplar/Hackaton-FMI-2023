@@ -6,5 +6,5 @@ class PartyRoomScheme(BaseModel):
 
     code: int
     owner_id: str
-    guests: List[str]
+    guest: List[str]
     spotify_data: dict
