@@ -34,7 +34,8 @@ async function createParty(spotify_data, owner_id) {
     const res = await collection.insertOne(party);
     return {
       id:res.insertedId.toString(),
-      code
+      code,
+      owner_id
     }
 
   } catch (error) {
