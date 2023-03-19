@@ -5,9 +5,10 @@ const app = express();
 const router = require('./routes/spotify-oauth');
 const {router : queueRouter } = require('./routes/queue_manager')
 const cors = require('cors')
+const {getQueue} = require('./routes/queue_manager')
 const {auth} = require('express-oauth2-jwt-bearer')
-const io = require("./socket/socket-io");
 const port = process.env.PORT_HTTPS;
+
 app.use(cors());
 
 const jwtCheck = auth({
@@ -23,7 +24,6 @@ app.use("/queue", queueRouter);
 app.get("/", jwtCheck, (req, res) => {
   res.json("hello world");
 });
-io.listen(process.env.PORT_SOCKET);
 
 app.listen(port, () => {
   console.log(`server is runing on port ${port}`);

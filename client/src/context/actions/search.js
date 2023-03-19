@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+
 export const search = async (transport) => {
     try {
         const res = await transport.get(`${VITE_API_SERVER_URL}/queue/search/q=${q}&party=${party}&user=${user}`, {
