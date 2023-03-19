@@ -64,5 +64,5 @@ def verify_token(token: str):
 
     jwt_claims = VerifyToken(token).verify()
     if jwt_claims.get('status') == 'error':
-        return True
-    return False
+        return False
+    return True
