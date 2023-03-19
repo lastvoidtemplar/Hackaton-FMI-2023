@@ -12,13 +12,12 @@ ENV MONGODB_PASSWORD 2VxOzTHwBQf6o45D
 ENV DATABASE_NAME Hakaton
 ENV COLLECTION_NAME parties
 
-# LOCAL HOST DOMAIN
-ENV SERVER_DOMAIN ""
 # 
 WORKDIR /code/
 # Install dependencies
 RUN pip install pipenv
-COPY Pipfile Pipfile.lock /code/
+COPY Pipfile /code/
+COPY Pipfile.lock /code/
 RUN pipenv install --system --dev
 COPY . /code/
 EXPOSE 8000

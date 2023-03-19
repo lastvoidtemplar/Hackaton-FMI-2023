@@ -20,6 +20,6 @@ RUN npm ci
 
 COPY . .
 
-EXPOSE ${PORT_HTTPS}
-EXPOSE ${PORT_SOCKET}
+EXPOSE 5000
+EXPOSE 5001
 CMD [ "node", "index.js" ]
