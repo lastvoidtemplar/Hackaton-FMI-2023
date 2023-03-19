@@ -25,6 +25,7 @@ const generateRandomString = (length) => {
 };
 const stateKey = "spotify_auth_state";
 router.get("/createParty", (req, res) => {
+  console.log('calbackl hit');
   const state = req.query.owner_id;
   res.cookie(stateKey, state);
   const scope = "user-read-private user-read-email";
@@ -42,6 +43,7 @@ router.get("/createParty", (req, res) => {
 });
 
 router.get("/callback", async (req, res) => {
+
   const code = req.query.code || null;
   const state = req.query.state || null;
   if (state === null) {
