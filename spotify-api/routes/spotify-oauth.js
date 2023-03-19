@@ -16,6 +16,7 @@ let party_id = 0;
 
 const stateKey = "spotify_auth_state";
 router.get("/createParty", (req, res) => {
+  console.log('calbackl hit');
   const state = req.query.owner_id;
   res.cookie(stateKey, state);
   const scope = "user-read-private user-read-email playlist-modify-public playlist-modify-private user-modify-playback-state user-read-private user-read-playback-state user-read-currently-playing";
@@ -33,6 +34,7 @@ router.get("/createParty", (req, res) => {
 });
 
 router.get("/callback", async (req, res) => {
+
   const code = req.query.code || null;
   const state = req.query.state || null;
   if (state === null) {
