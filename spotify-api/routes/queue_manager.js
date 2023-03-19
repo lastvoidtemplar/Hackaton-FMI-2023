@@ -4,7 +4,8 @@ const router = express.Router();
 const {createParty, getAccessToken} = require('../services/partyService');
 
 const SPOTIFY_PLAYLIST_NAME = "PARTYPLAYLIST"
-const PLAYLIST_REFRESH_TIME = 5000;
+const PLAYLIST_REFRESH_TIME_MIN = 5000;
+const PLAYLIST_REFRESH_TIME_MAX = 10000;
 const queues = [];
 
 async function getSpotifyToken(party) {
@@ -55,6 +56,7 @@ router.get('/user', async (req, res) => {
 });
 
 async function createPlaylist(token, partyid) {
+  if(queues[partyid].playlistid) return;
   const user = await getUser(token);
   const playlist = await axios({
     method: "post",
@@ -78,6 +80,7 @@ async function createPlaylist(token, partyid) {
   });
 
   queues[partyid].playlistid = playlist.id;
+  queues[partyid].syncIntervalId = setInterval(() => syncSpotifyQueue(partyid), PLAYLIST_REFRESH_TIME_MAX);
   return playlist;
 }
 
@@ -88,6 +91,11 @@ router.get('/playlist', async (req, res) => {
     res.send("invalid party id");
     return;
   }
+  if(queues[partyid].playlistid) {
+    res.status(400);
+    res.send("playlist already created");
+  }
+
   const result = await createPlaylist(await getSpotifyToken(req.query.id), req.query.id);
 
   res.send(result);
@@ -102,7 +110,8 @@ function createQueue(partyid) {
     tracks: [],
     playlistid: null,
     lastSyncTime: Date.now(),
-    nowPlaying: null
+    nowPlaying: null,
+    syncIntervalId: null
   };
   console.log(queues[partyid]);
   return queues[partyid];
@@ -166,11 +175,13 @@ router.get('/add', async (req, res) => {
   if(song) {        
     queues[partyid].tracks.push({track: song, score: 0, votes: {}});
   }
-  res.send(queues[partyid]);
+  res.send({
+    tracks: queues[partyid].tracks
+  });
 });
 
 function getQueue(partyid) {
-  return queues[partyid];
+  return {tracks: queues[partyid].tracks};
 }
 
 router.get('/get', (req, res) => {
@@ -250,10 +261,9 @@ async function getDevices(token) {
   return devices;
 }
 
-async function getActiveDevice(token) {
-  let activeDevice = undefined;
-  const devices = await getDevices(token);
+async function getActiveDevice(devices) {
   if(devices.length == 0) return undefined;
+  let activeDevice = undefined;
   for(const device of devices) {
     if(device.is_active) {
       activeDevice = device;
@@ -304,7 +314,7 @@ async function removeVote(partyid, userid, songid) {
 
 async function getNowPlaying(partyid) {
   const token = await getSpotifyToken(partyid);
-  
+
   const song = 
     await axios({
       method: "get",
@@ -316,14 +326,15 @@ async function getNowPlaying(partyid) {
       }
     }).then((response) => {
       const playing = response.data;
-      console.log(playing);
-      return songFromResponse(playing.item);
+      if(playing.item)
+        return songFromResponse(playing.item);
+      else return null;
     }).catch((error) => {
       console.log("getting now playing failed");
-      console.log(error.data);
+      console.log(error);
       return null;
     });
-  
+
   return song;
 }
 
@@ -340,10 +351,9 @@ router.get('/np', async (req, res) => {
 
 async function setPlaylistSongs(partyid, songs) {
   const playlistid  = queues[partyid].playlistid;
-  const token = getSpotifyToken(partyid);
-  const uriArray = songs.filter(x => x).map((song) => {
-    console.log(song);
-    return `spotify:track:${song.id}`;
+  const token = await getSpotifyToken(partyid);
+  const uriArray = songs.filter(x=>x).filter(x => x.track).map((song) => {
+    return `spotify:track:${song.track.id}`;
   });
   const str = uriArray.join(',');
   console.log(`set playlist: ${str}`);
@@ -360,7 +370,7 @@ async function setPlaylistSongs(partyid, songs) {
     console.log(response.data);
   }).catch((error) => {
     console.log("setting playlist songs failed");
-    console.log(error.data);
+    console.log(error.response.data);
     return null;
   });
 }
@@ -368,22 +378,50 @@ async function setPlaylistSongs(partyid, songs) {
 async function syncSpotifyQueue(partyid) {
   const nowPlaying = await getNowPlaying(partyid);
   const queue = queues[partyid];
-  if(nowPlaying != queue.nowPlaying) {
+  let playlist;
+  const nowid = nowPlaying ? nowPlaying.id : null;
+  const queueid = queue.nowPlaying ? queue.nowPlaying.id : null;
+  if(!nowid) {
+    queue.nowPlaying = queue.tracks[0].track;
+    playlist = [
+      queue.tracks[0], queue.tracks[1], queue.tracks[2]
+    ];
+  } else 
+  if(nowid !== queueid) {
     queue.tracks.shift();
-    queue.nowPlaying = nowPlaying;
+    queue.nowPlaying = queue.tracks[0].track;
+    playlist = [
+      queue.tracks[0], queue.tracks[1], queue.tracks[2]
+    ];
+  } else {
+    playlist = [
+      {track: nowPlaying}, queue.tracks[1], queue.tracks[2]
+    ];
   }
-  setPlaylistSongs(partyid, [
-    nowPlaying, queue.tracks[0], queue.tracks[1]
-  ]);
+  await setPlaylistSongs(partyid,playlist);
+  console.log(`syncing playlist ${queue.playlistid} for party: ${partyid}`);
 }
+
+router.get('/sync', async (req, res) => {
+  const partyid = req.query.id;
+  if(!existsParty(partyid)) {
+    res.status(400);
+    res.send("invalid party id");
+    return;
+  }
+  await syncSpotifyQueue(partyid);
+  res.send("done");
+});
 
 async function sortQueue(partyid) {
   queues[partyid].tracks.sort((a, b) => {
     return a.votes - b.votes;
   });
   const now = Date.now();
-  if(now - queues[partyid].lastSyncTime > PLAYLIST_REFRESH_TIME) {
-    // TODO: refresh playlist
+  const time = now - queues[partyid].lastSyncTime;
+  console.log(`update: time passed: ${time}`);
+  if(time > PLAYLIST_REFRESH_TIME_MIN) {
+    queues[partyid].lastSyncTime = now;
     await syncSpotifyQueue(partyid);
   }
 }
@@ -419,6 +457,107 @@ router.get('/unvote', async (req, res) => {
   res.send("success");
 });
 
+async function playPlaylist(partyid) {
+  const token = await getSpotifyToken(partyid);
+  const devices = await getDevices(token);
+  const device = await getActiveDevice(devices);
+  if(!device) device = devices[0];
+  if(!device) return;
+  const playlistid = queues[partyid].playlistid;
+  console.log(`play playlist: ${partyid}, ${device.id}, ${playlistid}`);
+  axios({
+    method: "put",
+    url: `https://api.spotify.com/v1/me/player/play?device_id=${device.id}`,
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    data: {
+      "context_uri": `spotify:playlist:${playlistid}`,
+      "offset": {
+        "position": 0
+      },
+      "position_ms": 0
+    }
+  }).then((response) => {
+    console.log(response.data);
+  }).catch((error) => {
+    console.log("playing failed");
+    console.log(error.response.data);
+  });
+  queues[partyid].nowPlaying = queues[partyid].tracks[0].track;
+}
+
+router.get('/play', async (req, res) => {
+  const partyid = req.query.id;
+  if(!existsParty(partyid)) {
+    res.status(400);
+    res.send("invalid party id");
+    return;
+  }
+  await playPlaylist(partyid);  
+  res.send("done");
+});
+
+async function deletePlaylist(token, partyid) {
+  const playlistid = queues[partyid].playlistid;
+  await axios({
+    method: "delete",
+    url: `https://api.spotify.com/v1/playlists/${playlistid}/followers`,
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    }
+  }).then((response) => {
+    console.log(response.data);
+  }).catch((error) => {
+    console.log("deleting playlist failed");
+    console.log(error.response.data);
+  }); 
+}
+
+async function pausePlayback(token, device) {
+  await axios({
+    method: "put",
+    url: `https://api.spotify.com/v1/me/player/pause`,
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    }
+  }).then((response) => {
+    console.log(response.data);
+  }).catch((error) => {
+    console.log("pausing failed");
+    console.log(error.response.data);
+  });
+}
+
+async function deleteParty(partyid) {
+  const queue = queues[partyid];
+  const token = await getSpotifyToken(partyid);
+  deletePlaylist(token, partyid);
+  clearInterval(queue.syncIntervalId);
+
+  const devices = await getDevices(token);
+  const device = await getActiveDevice(devices);
+  if(!device) device = devices[0];
+  if(!device) return;
+  pausePlayback(token, device);
+}
+
+router.get('/delete', async (req, res) => {
+  const partyid = req.query.id;
+  if(!existsParty(partyid)) {
+    res.status(400);
+    res.send("invalid party id");
+    return;
+  }
+  await deleteParty(partyid);  
+  res.send("done");
+});
 
 module.exports = {
   router,
