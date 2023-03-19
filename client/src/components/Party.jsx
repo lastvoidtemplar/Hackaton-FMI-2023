@@ -27,12 +27,6 @@ const Party = (props) => {
 
   const imageWidth = isLarge ? 100 : 50;
 
-    // const isSmall = useMediaQuery({ query: '(min-width: 576px)' })
-    // const isMedium = useMediaQuery({ query: '(min-width: 768px)' })
-    const isLarge = useMediaQuery({ query: '(min-width: 992px)' })
-
-    const imageWidth = isLarge ? 100 : 50
-
     // useEffect(() => {
     //     if (isAthenticated) {
     //         const socket = io();
