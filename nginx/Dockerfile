@@ -6,9 +6,9 @@ WORKDIR /app
 COPY client .
 WORKDIR /app/client
 RUN npm ci
-ENV VITE_NODE_URL = http://localhost:5000/
-ENV VITE_PYTHON_URL = http://localhost:8000/
-ENV VITE_AUTH0_CALLBACK_URL = http://127.0.0.1:5173/callback
+ENV VITE_NODE_URL = http://4.230.17.8:5000/
+ENV VITE_PYTHON_URL = http://4.230.17.8:8000/
+ENV VITE_AUTH0_CALLBACK_URL = http://4.230.17.8/callback
 ENV VITE_AUTH0_CLIENT_ID = crfuoasSy9ASSwaYat8S2JBTBqEPxjFP
 ENV VITE_AUTH0_DOMAIN = dev-c8nkqrxqb26svuth.us.auth0.com
 ENV VITE_AUDIENCE_NODE = spapi
