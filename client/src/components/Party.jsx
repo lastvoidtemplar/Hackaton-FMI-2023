@@ -1,75 +1,61 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
   faArrowUp,
   faArrowDown,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth0 } from "@auth0/auth0-react";
-import { io } from "socket.io-client";
 import { Card, Button, Dropdown } from "react-bootstrap";
 import { useSearchParams, useParams } from "react-router-dom";
 import Header from "./Header";
-
-var owner_id;
-var userID;
-
-window.addEventListener('beforeunload', (e) => {
-  e.preventDefault();
-  if (owner_id == userID) {
-    //HTTP to destroy party
-  }
-  e.returnValue = '';
-});
-
-let socket = io(import.meta.env.VITE_SOCKET_URL);
+import {getQueue, search, nowPlaying, vote as vt, addQueue} from '../context/actions/party'
+import { QueueContext } from "../context/queueContext";
 
 const Party = () => {
   const { user, isAuthenticated } = useAuth0();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const party_id = searchParams.get("party_id");
-  owner_id = searchParams.get("owner_id");
+  const owner_id = searchParams.get("owner_id");
   const { code } = useParams();
-  userID = user.sub.split('|')[1];
+  const userID = user.sub.split('|')[1];
 
-  // const isSmall = useMediaQuery({ query: '(min-width: 576px)' })
-  // const isMedium = useMediaQuery({ query: '(min-width: 768px)' })
   const isLarge = useMediaQuery({ query: "(min-width: 992px)" });
 
   const imageWidth = isLarge ? 100 : 50;
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      socket.emit("join", { user_id: userID, party_id: party_id })
-      
-      socket.on("queue", (q) => {
-        console.log(q)
-        //console.log(q)
-        //console.log(q.tracks)
-        //console.log(q.nowPlaying)
-      })
+  const { queueState, queueStateDispatch } = useContext(QueueContext)
 
-      return () => {
-        socket.emit('leave');
-        socket.disconnect();
-      }
-    }
+  const SECONDS = 10000;
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      await getQueue(party_id, queueStateDispatch);
+      await nowPlaying(party_id, queueStateDispatch);
+    }, SECONDS);
+  
+    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
   }, [])
 
-  const addSong = (track_id) => {
-    //socket.emit("addSong", song);
-    // HTTP
-  };
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    const res = await search(party_id, e.target.va, queueStateDispatch)
+  }
+
+  const vote = async (track_id, dir) => {
+    const res = await vt(userID, party_id, track_id, dir, queueStateDispatch)
+  }
 
   return (
     <>
-      <Header socket={socket} />
+      <Header />
 
-      <Dropdown className="d-flex justify-content-center">
+      <Dropdown variant="secondary" className="d-flex justify-content-center">
         <Dropdown.Toggle id="dropdown-basic">
-          <div className="input-group d-flex justify-content-center my-4">
+          <div as={Dropdown.Toggle} className="input-group d-flex justify-content-center my-4">
             <div className="form-outline">
               <input
                 type="search"
@@ -78,14 +64,14 @@ const Party = () => {
                 placeholder="Search"
               />
             </div>
-            <button type="button" className="btn btn-secondary">
+            <button type="button" className="btn btn-secondary" onClick={(e) => handleSearch(e)}>
               <FontAwesomeIcon icon={faSearch} />
             </button>
           </div>
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
-          {[...Array(10)].map((e, i) => (
+          {queueState.searchQueue.map((e, i) => (
             <Dropdown.Item>
               <div className="d-flex flex-column" style={{ overflow: "auto" }}>
 
@@ -95,19 +81,16 @@ const Party = () => {
                       style={{ width: `${imageWidth}px`, height: `${imageWidth}px` }}
                       className="my-auto w-auto"
                       variant="top"
-                      src="https://picsum.photos/200"
+                      src={`${e.track.image}`}
                     />
                     <Card.Body>
-                      <Card.Title>Sample song</Card.Title>
-                      <Card.Text>By X, Y , z Album : askjdasjkd</Card.Text>
-                    </Card.Body>
-                    <Card.Text className="my-auto me-3 fs-3">Votes: X</Card.Text>
+                      <Card.Title>{e.track.name}</Card.Title>
+                      <Card.Text>By: {e.track.authors[0]} Album: {e.track.album}</Card.Text>
+                    </Card.Body> 
+                    <Card.Text className="my-auto me-3 fs-3">Votes: {e.score}</Card.Text>
                   </Card>
-                  <Button variant="success" className="px-3 my-5 mx-1">
-                    <FontAwesomeIcon icon={faArrowUp} />
-                  </Button>
-                  <Button variant="danger" className="px-3 my-5 mx-1">
-                    <FontAwesomeIcon icon={faArrowDown} />
+                  <Button variant="success" className="px-3 my-5 mx-1" onClick={() => vote(e.track.id, 1)}>
+                    <FontAwesomeIcon icon={faPlus} />
                   </Button>
                 </div>
               </div></Dropdown.Item>
@@ -118,20 +101,20 @@ const Party = () => {
 
       {/* cards */}
       <div className="d-flex flex-column" style={{ overflow: "auto" }}>
-        {[...Array(10)].map((e, i) => (
+        {queueState.queue.map((e, i) => (
           <div className="d-flex justify-content-center " key={i}>
             <Card className="d-flex flex-row  justify-content-between m-3 w-100 bg-secondary text-white">
               <Card.Img
                 style={{ width: `${imageWidth}px`, height: `${imageWidth}px` }}
                 className="my-auto w-auto"
                 variant="top"
-                src="https://picsum.photos/200"
+                src={`${e.track.image}`}
               />
               <Card.Body>
-                <Card.Title>Sample song</Card.Title>
-                <Card.Text>By X, Y , z Album : askjdasjkd</Card.Text>
+                <Card.Title>{e.track.name}</Card.Title>
+                <Card.Text>By: {e.track.author[0]} Album: {e.track.album}</Card.Text>
               </Card.Body>
-              <Card.Text className="my-auto me-3 fs-3">Votes: X</Card.Text>
+              <Card.Text className="my-auto me-3 fs-3">Votes: {e.score}</Card.Text>
             </Card>
             <Button variant="success" className="px-3 my-5 mx-1" onClick={() => vote(1, i)}>
               <FontAwesomeIcon icon={faArrowUp} />
@@ -143,23 +126,26 @@ const Party = () => {
         ))}
       </div>
 
-      <Card className="d-flex flex-row  justify-content-between w-100 position-fixed bottom-0 text-white bg-dark">
-        <Card.Img
-          style={{ width: `${imageWidth}px`, height: `${imageWidth}px` }}
-          className="my-auto w-auto"
-          variant="top"
-          src="https://picsum.photos/200"
-        />
-        <Card.Body>
-          <Card.Title>Now playing</Card.Title>
-          <Card.Text>
-            Sample song <br></br>
-            By X, Y , z Album : askjdasjkd
-          </Card.Text>
-        </Card.Body>
-      </Card>
-    </>
-  );
+      {queueState.nowPlaying != null && (
+        <Card className="d-flex flex-row  justify-content-between w-100 position-fixed bottom-0 text-white bg-dark">
+          <Card.Img
+            style={{ width: `${imageWidth}px`, height: `${imageWidth}px` }}
+            className="my-auto w-auto"
+            variant="top"
+            src={`${queueState.nowPlaying.track.image}`}
+            />
+          <Card.Body>
+            <Card.Title>Now playing</Card.Title>
+            <Card.Text>
+              {queueState.nowPlaying.track.name} <br></br>
+              By: {queueState.nowPlaying.track.authors[0]} 
+              Album: {queueState.nowPlaying.track.album}
+            </Card.Text>
+          </Card.Body>
+        </Card>
+        )}
+      </>
+    );
 };
 
 export default Party;

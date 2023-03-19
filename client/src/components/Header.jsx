@@ -5,7 +5,7 @@ import Avatar from './Avatar'
 import Leave from './Leave'
 import { useLocation } from 'react-router-dom'
 
-const Header = ({ socket }) => {
+const Header = () => {
     
     const location = useLocation();
     
@@ -13,17 +13,11 @@ const Header = ({ socket }) => {
 
     const { isAuthenticated } = useAuth0();
 
-    const handleLeave = () => {
-        socket.emit('leave');
-        socket.disconnect();
-    }
-
     return (
         <header>
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container-fluid d-flex justify-content-between">
-                    {/*FIX LEAVE*/}
-                    {isAuthenticated && checkLocation ? (<Leave onClick={handleLeave}/>) : (<div></div>)}
+                    {isAuthenticated && checkLocation ? (<Leave/>) : (<div></div>)}
                     {isAuthenticated ? (<Avatar />) : (<LoginButton />)}
                 </div>
             </nav>
