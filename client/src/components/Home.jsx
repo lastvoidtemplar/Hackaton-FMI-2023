@@ -1,8 +1,7 @@
 import React from 'react'
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { useAuth0 } from '@auth0/auth0-react'
-import { UserContext } from '../context/UserContext'
 import { authenticate } from '../context/actions/authorize'
 import { Button, Modal, InputGroup, Form } from 'react-bootstrap'
 import Header from './Header'
@@ -15,11 +14,8 @@ const Home = () => {
   
   // Auth stuff
   const { user, getAccessTokenSilently, error, logout } = useAuth0();
-  const { auth } = useContext(UserContext);
 
   if (!user) return null;
-
-
 
   // useEffect(() => {
   //   const getToken = async () => {

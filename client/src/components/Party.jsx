@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -7,20 +7,31 @@ import {
   faArrowDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth0 } from "@auth0/auth0-react";
-import { UserContext } from "../context/UserContext";
 import { io } from "socket.io-client";
 import { Card, Button } from "react-bootstrap";
 import { useSearchParams,useParams } from "react-router-dom";
 import Header from "./Header";
 
+var owner_id;
+var userID;
+
+window.addEventListener('beforeunload', (e) => {
+  e.preventDefault();
+  if(owner_id == userID) {
+    //HTTP to destroy party
+  }
+  e.returnValue = '';
+});
+
 const Party = (props) => {
   const { user, isAthenticated } = useAuth0();
-  const { auth, userDispatch } = useContext(UserContext);
   const [searchParams, setSearchParams] = useSearchParams();
+
   const party_id = searchParams.get("party_id");
+  owner_id = searchParams.get("owner_id");
   const {code} = useParams();
-  console.log(party_id);
-  console.log(code);
+  userID = user.sub.split('|')[1];
+  
   // const isSmall = useMediaQuery({ query: '(min-width: 576px)' })
   // const isMedium = useMediaQuery({ query: '(min-width: 768px)' })
   const isLarge = useMediaQuery({ query: "(min-width: 992px)" });
@@ -35,7 +46,8 @@ const Party = (props) => {
         socket.emit('join', {user_id: user.sub, party_id: party_id})
 
         socket.on('queue', (q) => {
-          console.log(q)
+          console.log(q.tracks)
+          console.log(q.nowPlaying)
         })
 
         return () => {

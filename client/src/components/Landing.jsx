@@ -1,14 +1,11 @@
-import React, { useEffect, useContext } from 'react'
+import React, { useEffect } from 'react'
 import Header from './Header'
 import { useAuth0 } from '@auth0/auth0-react';
-import { UserContext } from '../context/UserContext';
-import { Outlet } from 'react-router';
 
 const Landing = () => {
 
     // goes to /authorize - i.e. Auth0 server
     const { loginWithRedirect, isAuthenticated, logout } = useAuth0();
-    const { auth, userDispatch } = useContext(UserContext)
     
     const handleSignup = async () => {
       await loginWithRedirect({
