@@ -1,36 +1,32 @@
 const express = require("express");
 const axios = require("axios");
-const https = require("https");
 const fs = require("fs");
 const app = express();
-const port = 5000;
 const router = require('./routes/spotify-oauth');
-const queueRouter = require('./routes/queue_manager')
+const {router : queueRouter } = require('./routes/queue_manager')
 const cors = require('cors')
 const {auth} = require('express-oauth2-jwt-bearer')
-
-app.use(cors())
+const io = require("./socket/socket-io");
+const port = process.env.PORT_HTTPS;
+app.use(cors());
 
 const jwtCheck = auth({
   audience: process.env.AUDIENCE,
-  issuerBaseURL:process.env.ISSUER,
-  tokenSigningAlg:process.env.TOKEN_SIGNING_ALG
-})
-app.use('/',router)
-
-app.use('/queue', queueRouter);
-
-app.get('/',jwtCheck, (req, res) => {
-  res.json('hello world')
+  issuerBaseURL: process.env.ISSUER,
+  tokenSigningAlg: process.env.TOKEN_SIGNING_ALG,
 });
 
-https.createServer(
-  {
-    key: fs.readFileSync("../key.pem"),
-    cert: fs.readFileSync("../cert.pem")
-  },
-  app
-).listen(port, () =>{
+app.use("/", router);
+
+app.use("/queue", queueRouter);
+
+app.get("/", jwtCheck, (req, res) => {
+  res.json("hello world");
+});
+io.listen(process.env.PORT_SOCKET);
+
+app.listen(port, () => {
   console.log(`server is runing on port ${port}`);
 });
 
+module.exports = app;
