@@ -37,7 +37,7 @@ const Home = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     
-    console.log(userId);
+    console.log(userID);
     console.log(await getAccessTokenSilently());
     console.log(code);
     const res = await join(await getAccessTokenSilently(), userID, code);

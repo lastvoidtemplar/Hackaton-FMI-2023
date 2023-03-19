@@ -11,7 +11,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize?";
 const FRONTEND_REDIRECT_URL = process.env.FRONTEND_REDIRECT_URL
-
+const { createQueue } = require('./queue_manager');
 let party_id = 0;
 
 const stateKey = "spotify_auth_state";
@@ -64,9 +64,8 @@ router.get("/callback", async (req, res) => {
       if (response.status === 200) {
         party_id++;
         const dto = await createParty(response.data,state);
-        const redirect=`${FRONTEND_REDIRECT_URL}${dto.code}?party_id=${dto.id}&owner_id=${dto.owner_id}`;
-        console.log(redirect);
-        res.redirect(redirect);
+        createQueue(dto.id);
+        res.redirect(`${FRONTEND_REDIRECT_URL}${dto.code}?party_id=${dto.id}&owner_id=${dto.owner_id}`);
       } else {
         console.log(response);
         res.json(response);
