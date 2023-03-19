@@ -6,6 +6,7 @@ from .authentication import verify_token
 from .database import find_one_item, update_one_item
 from .models import PartyRoomScheme
 
+
 router = APIRouter(prefix="/api")
 
 token_auth_scheme = HTTPBearer()
@@ -44,7 +45,9 @@ async def leave_room(
                        code: int = Body(), 
                        token: str = Depends(token_auth_scheme)):
 
+    # Verify AUTH0 JWT token
     verification_info = verify_token(token.credentials)
+    # Remove provided user to the party
     if verification_info.get('status'):
             
             document = await find_one_item({'code': code})
