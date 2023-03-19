@@ -1,6 +1,7 @@
 require("dotenv").config();
 const http = require("http");
 const {Server} = require('socket.io')
+const {getQueue} = require('../routes/queue_manager')
 const app = require('../index')
 
 
@@ -19,7 +20,8 @@ io.on("connection", (socket) => {
   });
   socket.on('vote',(party_id,track_id,user_id,value)=>{
     console.log(`${value} ${user_id} ${track_id} ${party_id}`);
-    const tracks = ["hello", "world","name","everyone","rrrr"] 
+    const queue = getQueue(party_id);
+    const tracks = {tracks:queue,nowPlaying: queue[0]};
     socket.emit(party_id.toString(),tracks)
   })
   socket.on("disconnected", ({ user, room }) => {
