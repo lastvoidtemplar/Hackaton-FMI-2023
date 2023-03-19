@@ -3,9 +3,11 @@ const axios = require("axios");
 const router = express.Router();
 const {createParty, getAccessToken} = require('../services/partyService');
 
-const SPOTIFY_PLAYLIST_NAME = "PARTYPLAYLIST"
-const PLAYLIST_REFRESH_TIME_MIN = 5000;
-const PLAYLIST_REFRESH_TIME_MAX = 10000;
+require('dotenv').config()
+
+const SPOTIFY_PLAYLIST_NAME = process.env.SPAPI_SPOTIFY_PLAYLIST_NAME
+const PLAYLIST_REFRESH_TIME_MIN = Number(process.env.SPAPI_PLAYLIST_REFRESH_TIME_MIN);
+const PLAYLIST_REFRESH_TIME_MAX = Number(process.env.SPAPI_PLAYLIST_REFRESH_TIME_MAX);
 const queues = [];
 
 async function getSpotifyToken(party) {
