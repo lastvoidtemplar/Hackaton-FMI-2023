@@ -3,17 +3,28 @@ import Landing from "./components/Landing"
 import Home from "./components/Home"
 import Callback from './Callback'
 import { AuthGuard } from './components/AuthGuard'
-import { Route, Routes } from "react-router-dom"
+import { Route, Routes, useNavigate, useParams } from "react-router-dom"
 import Party from './components/Party'
 import NotFound from './components/NotFound'
 
 const MainRoutes = () => {
+
+
+
+    /*
+    Проблемът май е решен
+    env променливата FRONTEND_REDIRECT_URL беше написана с localhost а не с 127.0.0.1
+    */
+
+
+
+
     return (
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<AuthGuard component={Home} />}/>
         <Route path="/callback" element={<Callback />}/>
-        <Route path="/party/:party_id" element={<AuthGuard component={Party} />} />
+        <Route path="/party/:code" element={<Party />} />
         <Route path="*" element={<NotFound />} />
         {/* "/" -> <Home />
             "/vote" -> <VotingPoll> 

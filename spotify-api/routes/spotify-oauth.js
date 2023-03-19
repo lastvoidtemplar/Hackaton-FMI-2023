@@ -37,6 +37,7 @@ router.get("/createParty", (req, res) => {
       state: state,
       redirect_uri: REDIRECT_URI,
     });
+    console.log(redirect);
   res.redirect(redirect);
 });
 
