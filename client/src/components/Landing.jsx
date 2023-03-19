@@ -42,7 +42,6 @@ const Landing = () => {
           <button className='mt-4 btn btn-dark btn-lg' onClick={handleSignup}>Get Started</button>
         </div>
       </main>
-      {/* <Outlet /> */}
     </>
   )
 }
