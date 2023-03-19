@@ -16,12 +16,11 @@ const jwtCheck = auth({
   issuerBaseURL:process.env.ISSUER,
   tokenSigningAlg:process.env.TOKEN_SIGNING_ALG
 })
-app.use(jwtCheck);
 app.use('/',router)
 
 app.use('/queue', queueRouter);
 
-app.get('/', (req, res) => {
+app.get('/',jwtCheck, (req, res) => {
   res.json('hello world')
 });
 

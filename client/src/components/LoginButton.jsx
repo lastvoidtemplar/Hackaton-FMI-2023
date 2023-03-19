@@ -15,8 +15,8 @@ const LoginButton = () => {
     }
 
     return (
-        <button onClick={handleLogin}>
-            Log in
+        <button className="btn btn-secondary ms-2" type="submit" onClick={handleLogin}>
+                Log in
         </button>
     )
 }

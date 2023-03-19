@@ -3,11 +3,13 @@ import React from 'react'
 const Callback = () => {
   return (
     <>
-      <div>Callback</div>
-      <br></br>
-      <div>Must contain the base layout(navbar and sidebar) and content is inside</div>
-      <br></br>
-      <div>For smooth transition</div>
+      <header>
+            <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div className="container-fluid d-flex justify-content-between">
+                    <div></div>
+                </div>
+            </nav>
+        </header>
     </>
   )
 }
