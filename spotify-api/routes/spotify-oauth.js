@@ -64,7 +64,9 @@ router.get("/callback", async (req, res) => {
       if (response.status === 200) {
         party_id++;
         const dto = await createParty(response.data,state);
-        res.redirect(`${FRONTEND_REDIRECT_URL}${dto.code}?party_id=${dto.id}&owner_id=${dto.owner_id}`);
+        const redirect=`${FRONTEND_REDIRECT_URL}${dto.code}?party_id=${dto.id}&owner_id=${dto.owner_id}`;
+        console.log(redirect);
+        res.redirect(redirect);
       } else {
         console.log(response);
         res.json(response);

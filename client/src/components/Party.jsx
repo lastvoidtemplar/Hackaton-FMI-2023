@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -23,13 +23,15 @@ window.addEventListener('beforeunload', (e) => {
   e.returnValue = '';
 });
 
-const Party = (props) => {
-  const { user, isAthenticated } = useAuth0();
+let socket = io(import.meta.env.VITE_SOCKET_URL);
+
+const Party = () => {
+  const { user, isAuthenticated } = useAuth0();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const party_id = searchParams.get("party_id");
   owner_id = searchParams.get("owner_id");
-  const {code} = useParams();
+  const { code } = useParams();
   userID = user.sub.split('|')[1];
   
   // const isSmall = useMediaQuery({ query: '(min-width: 576px)' })
@@ -38,16 +40,15 @@ const Party = (props) => {
 
   const imageWidth = isLarge ? 100 : 50;
 
-  var socket;
-
     useEffect(() => {
-      if (isAthenticated) {
-        socket = io(import.meta.env.VITE_NODE_URL);
+      if (isAuthenticated) {
+        console.log("xd")
         socket.emit('join', {user_id: user.sub, party_id: party_id})
 
         socket.on('queue', (q) => {
-          console.log(q.tracks)
-          console.log(q.nowPlaying)
+          console.log(q)
+          //console.log(q.tracks)
+          //console.log(q.nowPlaying)
         })
 
         return () => {
@@ -55,7 +56,7 @@ const Party = (props) => {
           socket.disconnect();
         }
       }
-    }, [isAthenticated])
+    }, [isAuthenticated])
 
   const addSong = (track_id) => {
     //socket.emit("addSong", song);
@@ -63,7 +64,8 @@ const Party = (props) => {
   };
 
   const vote = (voted, track_id) => {
-    socket.emit("vote", {user_id: user.sub, party_id, vote: voted, track_id});
+    console.log("vote");
+    socket.emit('vote', {user_id: user.sub, party_id, vote: voted, track_id});
   };
 
   return (
@@ -100,10 +102,10 @@ const Party = (props) => {
               </Card.Body>
               <Card.Text className="my-auto me-3 fs-3">Votes: X</Card.Text>
             </Card>
-            <Button variant="success" className="px-3 my-5 mx-1" onClick={vote(+1, i)}>
+            <Button variant="success" className="px-3 my-5 mx-1" onClick={()=>vote(1, i)}>
               <FontAwesomeIcon icon={faArrowUp} />
             </Button>
-            <Button variant="danger" className="px-3 my-5 mx-1" onClick={vote(-1, i)}>
+            <Button variant="danger" className="px-3 my-5 mx-1" onClick={()=>vote(-1, i)}>
               <FontAwesomeIcon icon={faArrowDown} />
             </Button>
           </div>
