@@ -55,7 +55,7 @@ const Home = () => {
       <h1 className='text-center display-1 fw-bold mt-5'>Sample  name</h1>
         <h2 className='text-center display-5 '>by Коч Компания</h2>
         <div className="d-flex justify-content-center gap-5 mt-5 pt-5">
-          <a className="btn btn-secondary btn-lg" type="button" href={`${import.meta.env.VITE_NODE_URL}/createParty?ownerid=${user.sub}`}>
+          <a className="btn btn-secondary btn-lg" type="button" href={`${import.meta.env.VITE_NODE_URL}createParty?owner_id=${user.sub.split('|')[1]}`}>
            Create a party!
           </a>
           {/* <Link className="btn btn-secondary btn-lg" type="button" to='/party'>Create a party!</Link> */}
