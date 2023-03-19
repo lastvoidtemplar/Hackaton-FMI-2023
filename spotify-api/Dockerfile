@@ -22,4 +22,4 @@ COPY . .
 
 EXPOSE ${PORT_HTTPS}
 EXPOSE ${PORT_SOCKET}
-CMD [ "node", "server.js" ]
+CMD [ "node", "index.js" ]
