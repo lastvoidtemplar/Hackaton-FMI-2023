@@ -9,7 +9,7 @@ const PLAYLIST_REFRESH_TIME_MAX = 10000;
 const queues = [];
 
 async function getSpotifyToken(party) {
-  return getAccessToken("64161b9a30b1c401ed78cc89");
+  return getAccessToken(party);
 }
 
 function existsParty(partyid) {
