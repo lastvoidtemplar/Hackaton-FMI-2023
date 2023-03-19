@@ -27,33 +27,36 @@ const Party = (props) => {
 
   const imageWidth = isLarge ? 100 : 50;
 
-    // useEffect(() => {
-    //     if (isAthenticated) {
-    //         const socket = io();
-    //         if (auth.role == "Guest") {
-    //             socket.emit('joinRoom', user.sub)
-    //         }
-    //         else {
-    //             socket.emit('createRoom', user.sub)
-    //         }
-    //     }
-    // }, [])
+  var socket;
 
-  const addSong = (song) => {
-    socket.emit("addSong", song);
+    useEffect(() => {
+      if (isAthenticated) {
+        socket = io(import.meta.env.VITE_NODE_URL);
+        socket.emit('join', {user_id: user.sub, party_id: party_id})
+
+        socket.on('queue', (q) => {
+          console.log(q)
+        })
+
+        return () => {
+          socket.emit('leave');
+          socket.disconnect();
+        }
+      }
+    }, [isAthenticated])
+
+  const addSong = (track_id) => {
+    //socket.emit("addSong", song);
+    // HTTP
   };
 
-  const vote = (voted) => {
-    socket.emit("vote", user.sub, Boolean(voted));
-  };
-
-  const leave = () => {
-    socket.emit("leave");
+  const vote = (voted, track_id) => {
+    socket.emit("vote", {user_id: user.sub, party_id, vote: voted, track_id});
   };
 
   return (
     <>
-      <Header />
+      <Header socket={socket}/>
       <div className="input-group d-flex justify-content-center my-4">
         <div className="form-outline">
           <input
@@ -85,10 +88,10 @@ const Party = (props) => {
               </Card.Body>
               <Card.Text className="my-auto me-3 fs-3">Votes: X</Card.Text>
             </Card>
-            <Button variant="success" className="px-3 my-5 mx-1">
+            <Button variant="success" className="px-3 my-5 mx-1" onClick={vote(+1, i)}>
               <FontAwesomeIcon icon={faArrowUp} />
             </Button>
-            <Button variant="danger" className="px-3 my-5    mx-1">
+            <Button variant="danger" className="px-3 my-5 mx-1" onClick={vote(-1, i)}>
               <FontAwesomeIcon icon={faArrowDown} />
             </Button>
           </div>
