@@ -99,7 +99,18 @@ async function refreshToken(party) {
     console.log(error);
   }
 }
+async function isUserInTheParty(party_id_str,guest_id){
+  const party_id = new ObjectId(party_id_str)
+  const party = await collection.findOne({_id:party_id})
+  if(party===null){
+    console.log('Null party');
+    return false;
+  }
+  return party.guest.filter(guest=>guest===guest_id).length !== 0
+
+}
 module.exports = {
   createParty,
   getAccessToken,
+  isUserInTheParty
 };

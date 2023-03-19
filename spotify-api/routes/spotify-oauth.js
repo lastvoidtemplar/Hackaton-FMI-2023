@@ -3,7 +3,7 @@ const querystring = require("querystring");
 const bodyParser = require('body-parser');
 const express = require("express");
 const axios = require("axios");
-const { createParty, getAccessToken } = require("../services/partyService");
+const { createParty, getAccessToken,isUserInTheParty } = require("../services/partyService");
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -14,15 +14,6 @@ const FRONTEND_REDIRECT_URL = process.env.FRONTEND_REDIRECT_URL
 
 let party_id = 0;
 
-const generateRandomString = (length) => {
-  let text = "";
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-};
 const stateKey = "spotify_auth_state";
 router.get("/createParty", (req, res) => {
   const state = req.query.owner_id;
@@ -85,5 +76,9 @@ router.get("/callback", async (req, res) => {
 router.get("/token", async (req, res) => {
    res.json(await getAccessToken("6415f33edba4b61aadf9fccf"));
 });
+
+router.get('/check',async(req,res)=>{
+  res.json(await isUserInTheParty("6416031b407f5e174ce739ab","1234567"))
+})
 
 module.exports = router;
