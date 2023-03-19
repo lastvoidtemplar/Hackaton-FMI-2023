@@ -346,6 +346,7 @@ async function setPlaylistSongs(partyid, songs) {
     return `spotify:track:${song.id}`;
   });
   const str = uriArray.join(',');
+  console.log(`set playlist: ${str}`);
 
   await axios({
     method: "put",
@@ -396,6 +397,7 @@ router.get('/vote', async (req, res) => {
   if(!existsParty(partyid) || !songid || !userid || !direction) {
     res.status(400);
     res.send("invalid params");
+    return;
   }
 
   await addVote(partyid, userid, songid, direction);
