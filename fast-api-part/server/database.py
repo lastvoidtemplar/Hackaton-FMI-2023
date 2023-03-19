@@ -8,7 +8,10 @@ dotenv.load_dotenv()
 # MongoDB credentials
 user = os.getenv('MONGODB_USER')
 password = os.getenv('MONGODB_PASSWORD')
+
+# MongoDB database name
 database_name = os.getenv('DATABASE_NAME')
+# MongoDB collection name
 collection_name = os.getenv('COLLECTION_NAME')
 
 mongo_db_uri = f"mongodb+srv://{user}:{password}@cluster0.pbfpoj7.mongodb.net/?retryWrites=true&w=majority"
