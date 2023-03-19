@@ -62,3 +62,23 @@ async def leave_room(
     why = verification_info.get('msg')
     raise HTTPException(status_code=400, detail=f"Your token isn't valid: {why}")
 
+
+async def get_qr_code(response: Response,
+                user_id: str = Body(),
+                owner_id: str = Body(),
+                code: int = Body(),
+                party_id: str = Body(),
+                token: str = Depends(token_auth_scheme)):
+    if verify_token(token.credentials):
+        if await check_connection():
+            database = client.Hakaton
+            print(code)
+            document = await database.parties.find_one({'code': code})
+            print(document)
+            obj = PartyRoomScheme(**document)
+            print(obj)
+            if obj and user_id in obj.guest and owner_id == obj.owner_id:
+                qrcode_base64 = make_base64_qr_code({'owner_id': owner_id, 'code': code, 'party_id': party_id})
+                return qrcode_base64
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return {"msg": "fail"}
