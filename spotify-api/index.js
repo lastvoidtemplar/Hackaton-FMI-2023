@@ -5,7 +5,7 @@ const fs = require("fs");
 const app = express();
 const port = 5000;
 const router = require('./routes/spotify-oauth');
-const queueRouter = require('./routes/queue_manager')
+const {router : queueRouter } = require('./routes/queue_manager')
 const cors = require('cors')
 const {auth} = require('express-oauth2-jwt-bearer')
 

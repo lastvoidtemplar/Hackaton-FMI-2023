@@ -4,6 +4,7 @@ const router = express.Router();
 const {createParty, getAccessToken} = require('../services/partyService');
 
 const SPOTIFY_PLAYLIST_NAME = "PARTYPLAYLIST"
+const PLAYLIST_REFRESH_TIME = 5000;
 const queues = [];
 
 async function getSpotifyToken(party) {
@@ -99,7 +100,9 @@ router.get('/', (req, res) => {
 function createQueue(partyid) {
   queues[partyid] = {
     tracks: [],
-    playlistid: null
+    playlistid: null,
+    lastSyncTime: Date.now(),
+    nowPlaying: null
   };
   console.log(queues[partyid]);
   return queues[partyid];
@@ -166,6 +169,10 @@ router.get('/add', async (req, res) => {
   res.send(queues[partyid]);
 });
 
+function getQueue(partyid) {
+  return queues[partyid];
+}
+
 router.get('/get', (req, res) => {
   const partyid = req.query.id;
   if(!existsParty(partyid)) {
@@ -173,7 +180,7 @@ router.get('/get', (req, res) => {
     res.send("invalid party id");
     return;
   }
-  res.send(queues[partyid]);
+  res.send(getQueue(partyid));
 });
 
 // requires ?id=...?user=...?q=...?limit=...
@@ -267,7 +274,7 @@ router.get('/devices', async (req, res) => {
   res.send(await getDevices(spotify_token));
 });
 
-function addVote(partyid, userid, songid, direction) {
+async function addVote(partyid, userid, songid, direction) {
   const items = queues[partyid].tracks;
   for(const item of items) {
     if(item.track.id == songid) {
@@ -279,9 +286,10 @@ function addVote(partyid, userid, songid, direction) {
       break;
     }
   }
+  sortQueue(partyid);
 }
 
-function removeVote(partyid, userid, songid) {
+async function removeVote(partyid, userid, songid) {
   const items = queues[partyid].tracks;
   for(const item of items) {
     if(item.track.id == songid) {
@@ -291,9 +299,95 @@ function removeVote(partyid, userid, songid) {
       break;
     }
   }
+  sortQueue(partyid);
 }
 
-router.get('/vote', (req, res) => {
+async function getNowPlaying(partyid) {
+  const token = await getSpotifyToken(partyid);
+  
+  const song = 
+    await axios({
+      method: "get",
+      url: "https://api.spotify.com/v1/me/player/currently-playing",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }
+    }).then((response) => {
+      const playing = response.data;
+      console.log(playing);
+      return songFromResponse(playing.item);
+    }).catch((error) => {
+      console.log("getting now playing failed");
+      console.log(error.data);
+      return null;
+    });
+  
+  return song;
+}
+
+router.get('/np', async (req, res) => {
+  const partyid = req.query.id;
+  if(!existsParty(partyid)) {
+    res.status(400);
+    res.send("invalid party id");
+  }
+  const result = await getNowPlaying(partyid);
+
+  res.send(result);
+});
+
+async function setPlaylistSongs(partyid, songs) {
+  const playlistid  = queues[partyid].playlistid;
+  const token = getSpotifyToken(partyid);
+  const uriArray = songs.filter(x => x).map((song) => {
+    console.log(song);
+    return `spotify:track:${song.id}`;
+  });
+  const str = uriArray.join(',');
+
+  await axios({
+    method: "put",
+    url: `https://api.spotify.com/v1/playlists/${playlistid}/tracks?uris=${str}`,
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    }
+  }).then((response) => {
+    console.log(response.data);
+  }).catch((error) => {
+    console.log("setting playlist songs failed");
+    console.log(error.data);
+    return null;
+  });
+}
+
+async function syncSpotifyQueue(partyid) {
+  const nowPlaying = await getNowPlaying(partyid);
+  const queue = queues[partyid];
+  if(nowPlaying != queue.nowPlaying) {
+    queue.tracks.shift();
+    queue.nowPlaying = nowPlaying;
+  }
+  setPlaylistSongs(partyid, [
+    nowPlaying, queue.tracks[0], queue.tracks[1]
+  ]);
+}
+
+async function sortQueue(partyid) {
+  queues[partyid].tracks.sort((a, b) => {
+    return a.votes - b.votes;
+  });
+  const now = Date.now();
+  if(now - queues[partyid].lastSyncTime > PLAYLIST_REFRESH_TIME) {
+    // TODO: refresh playlist
+    await syncSpotifyQueue(partyid);
+  }
+}
+
+router.get('/vote', async (req, res) => {
   const partyid = req.query.id;
   const songid = req.query.song;
   const userid = req.query.user;
@@ -304,11 +398,11 @@ router.get('/vote', (req, res) => {
     res.send("invalid params");
   }
 
-  addVote(partyid, userid, songid, direction);
+  await addVote(partyid, userid, songid, direction);
   res.send("success");
 });
 
-router.get('/unvote', (req, res) => {
+router.get('/unvote', async (req, res) => {
   const partyid = req.query.id;
   const songid = req.query.song;
   const userid = req.query.user;
@@ -318,9 +412,18 @@ router.get('/unvote', (req, res) => {
     res.send("invalid params");
   }
 
-  removeVote(partyid, userid, songid);
+  await removeVote(partyid, userid, songid);
+  sortQueue(partyid);
   res.send("success");
 });
 
 
-module.exports = router;
+module.exports = {
+  router,
+  createPlaylist,
+  createQueue,
+  getQueue,
+  addVote,
+  removeVote,
+  getNowPlaying,
+};
