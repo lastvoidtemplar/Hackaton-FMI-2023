@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  nginx: 
+    build: ./
+    ports:
+      - 80:80
+    environment:
+      NGINX_SPAPI_URL: spapi
+      NGINX_FAPI_URL: fapi
+  spapi:
+    build: ./spotify-api
+    ports:
+      - 5000:5000
+      - 5001:5001
+  fapi:
+    build: ./fast-api-part
+    ports:
+      - 8000:8000

@@ -20,6 +20,6 @@ ENV NODE_ENV production
 # Stage 1, based on Nginx, to have only the compiled app, ready for production with Nginx
 FROM nginx:latest
 COPY --from=build-stage /app/dist/ /usr/share/nginx/html
-COPY  nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY  nginx/nginx.conf /etc/nginx
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
